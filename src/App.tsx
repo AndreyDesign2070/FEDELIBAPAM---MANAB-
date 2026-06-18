@@ -9,6 +9,8 @@ import PublicationModal from "./components/PublicationModal";
 import StandingsManager from "./components/StandingsManager";
 import LeaguesManager from "./components/LeaguesManager";
 import TransparencySection from "./components/TransparencySection";
+import { onSnapshot, setDoc } from "firebase/firestore";
+import { stateDocRef } from "./firebase";
 import { 
   Trophy, 
   ShieldCheck, 
@@ -144,44 +146,75 @@ export default function App() {
   // Scroll to top marker
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Load from local storage
+  // Load from Firebase Firestore with real-time onSnapshot subscription
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("FEDELIBAPAM_STATE_V1");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === "object") {
-          const merged: FEDELIBAPAMState = {
-            ...INITIAL_STATE,
-            ...parsed,
-            publications: Array.isArray(parsed.publications) ? parsed.publications : INITIAL_STATE.publications,
-            standings: Array.isArray(parsed.standings) ? parsed.standings : INITIAL_STATE.standings,
-            leagues: Array.isArray(parsed.leagues) ? parsed.leagues : INITIAL_STATE.leagues,
-            transparencyDocuments: Array.isArray(parsed.transparencyDocuments) ? parsed.transparencyDocuments : INITIAL_STATE.transparencyDocuments,
-            sports: Array.isArray(parsed.sports) ? parsed.sports : INITIAL_STATE.sports
-          };
-          setAppState(merged);
-        }
+    const unsubscribe = onSnapshot(stateDocRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as FEDELIBAPAMState;
+        const merged: FEDELIBAPAMState = {
+          ...INITIAL_STATE,
+          ...data,
+          publications: Array.isArray(data.publications) ? data.publications : INITIAL_STATE.publications,
+          standings: Array.isArray(data.standings) ? data.standings : INITIAL_STATE.standings,
+          leagues: Array.isArray(data.leagues) ? data.leagues : INITIAL_STATE.leagues,
+          transparencyDocuments: Array.isArray(data.transparencyDocuments) ? data.transparencyDocuments : INITIAL_STATE.transparencyDocuments,
+          sports: Array.isArray(data.sports) ? data.sports : INITIAL_STATE.sports
+        };
+        setAppState(merged);
+        setIsLoading(false);
+      } else {
+        // If document doesn't exist yet, seed it with INITIAL_STATE
+        setDoc(stateDocRef, INITIAL_STATE)
+          .then(() => {
+            setAppState(INITIAL_STATE);
+            setIsLoading(false);
+          })
+          .catch((err) => {
+            console.error("Error seeding initial state to Firestore:", err);
+            // Fallback to static so the app is still functional
+            setAppState(INITIAL_STATE);
+            setIsLoading(false);
+          });
       }
-    } catch (e) {
-      console.error("Error loading local storage state: ", e);
-    }
+    }, (error) => {
+      console.error("Firestore onSnapshot error:", error);
+      // Fallback: try loading from local storage as backup, or use INITIAL_STATE
+      try {
+        const saved = localStorage.getItem("FEDELIBAPAM_STATE_V1");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === "object") {
+            setAppState({ ...INITIAL_STATE, ...parsed });
+          }
+        }
+      } catch (bkErr) {
+        console.error("Local backup fallback error:", bkErr);
+      }
+      setIsLoading(false);
+    });
 
     // Scroll listener
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
     };
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
-  // Save to local storage helper
-  const saveState = (newState: FEDELIBAPAMState) => {
+  // Save to Firebase Firestore helper for full-stack multi-device real-time sync
+  const saveState = async (newState: FEDELIBAPAMState) => {
+    // Keep local appState immediately responsive
     setAppState(newState);
     try {
+      await setDoc(stateDocRef, newState);
+      // Also cache locally for reliable instant launches
       localStorage.setItem("FEDELIBAPAM_STATE_V1", JSON.stringify(newState));
     } catch (e) {
-      console.error("Error saving state to local storage: ", e);
+      console.error("Error saving state to Firebase: ", e);
     }
   };
 
