@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "FedelibapamState": {
+      "title": "FEDELIBAPAMState",
+      "description": "Unified state for the FEDELIBAPAM landing page and portal.",
+      "type": "object",
+      "properties": {
+        "publications": {
+          "type": "array",
+          "description": "List of news and activity articles."
+        },
+        "standings": {
+          "type": "array",
+          "description": "League and sport tournament standings."
+        },
+        "leagues": {
+          "type": "array",
+          "description": "Official affiliated athletic leagues."
+        },
+        "transparencyDocuments": {
+          "type": "array",
+          "description": "PDF/Doc transparency records."
+        },
+        "sports": {
+          "type": "array",
+          "description": "List of active sport classifications."
+        },
+        "coverUrl": {
+          "type": "string",
+          "description": "URL of the cover hero backdrop image."
+        },
+        "shieldUrl": {
+          "type": "string",
+          "description": "URL of the primary circular brand logo."
+        },
+        "introductionText": {
+          "type": "string",
+          "description": "Institutional welcoming message."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "Official institutional contact email."
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "Official contact telephone."
+        }
+      }
+    }
+  },
+  "firestore": {
+    "fedelibapam_data/main_state": {
+      "schema": "FedelibapamState",
+      "description": "Dynamic state container document."
+    }
+  }
+}
