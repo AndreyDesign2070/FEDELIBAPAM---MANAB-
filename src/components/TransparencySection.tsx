@@ -128,10 +128,11 @@ export default function TransparencySection({
       <AnimatePresence>
         {isAddingDoc && isAdmin && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden mb-8 p-5 md:p-6 bg-white rounded-2xl border border-slate-200 shadow-sm"
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="mb-8 p-5 md:p-6 bg-white rounded-2xl border border-slate-200 shadow-sm"
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 font-mono mb-4 flex items-center gap-1.5">
               <FileText className="w-4 h-4 text-brand-green" />

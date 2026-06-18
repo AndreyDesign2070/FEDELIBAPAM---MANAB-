@@ -147,10 +147,11 @@ export default function LeaguesManager({
       <AnimatePresence>
         {isAddingLeague && isAdmin && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden mb-8 p-5 bg-slate-50 rounded-2xl border border-slate-200"
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="mb-8 p-5 bg-slate-50 rounded-2xl border border-slate-200"
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 font-mono mb-4">Ingresar Ficha de Liga Barrial</h3>
             <form onSubmit={handleAddSubmit} className="space-y-4">
