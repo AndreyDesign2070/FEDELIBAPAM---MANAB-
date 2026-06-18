@@ -146,52 +146,86 @@ export default function App() {
   // Scroll to top marker
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Load from Firebase Firestore with real-time onSnapshot subscription
+  // Load from Firebase Firestore with real-time onSnapshot subscription and mobile resume auto-reactivation
   useEffect(() => {
-    const unsubscribe = onSnapshot(stateDocRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data() as FEDELIBAPAMState;
-        const merged: FEDELIBAPAMState = {
-          ...INITIAL_STATE,
-          ...data,
-          publications: Array.isArray(data.publications) ? data.publications : INITIAL_STATE.publications,
-          standings: Array.isArray(data.standings) ? data.standings : INITIAL_STATE.standings,
-          leagues: Array.isArray(data.leagues) ? data.leagues : INITIAL_STATE.leagues,
-          transparencyDocuments: Array.isArray(data.transparencyDocuments) ? data.transparencyDocuments : INITIAL_STATE.transparencyDocuments,
-          sports: Array.isArray(data.sports) ? data.sports : INITIAL_STATE.sports
-        };
-        setAppState(merged);
-        setIsLoading(false);
-      } else {
-        // If document doesn't exist yet, seed it with INITIAL_STATE
-        setDoc(stateDocRef, INITIAL_STATE)
-          .then(() => {
-            setAppState(INITIAL_STATE);
-            setIsLoading(false);
-          })
-          .catch((err) => {
-            console.error("Error seeding initial state to Firestore:", err);
-            // Fallback to static so the app is still functional
-            setAppState(INITIAL_STATE);
-            setIsLoading(false);
-          });
+    let unsubscribe: (() => void) | null = null;
+
+    const connectFirestore = () => {
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
       }
-    }, (error) => {
-      console.error("Firestore onSnapshot error:", error);
-      // Fallback: try loading from local storage as backup, or use INITIAL_STATE
-      try {
-        const saved = localStorage.getItem("FEDELIBAPAM_STATE_V1");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && typeof parsed === "object") {
-            setAppState({ ...INITIAL_STATE, ...parsed });
-          }
+
+      unsubscribe = onSnapshot(stateDocRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data() as FEDELIBAPAMState;
+          const merged: FEDELIBAPAMState = {
+            ...INITIAL_STATE,
+            ...data,
+            publications: Array.isArray(data.publications) ? data.publications : INITIAL_STATE.publications,
+            standings: Array.isArray(data.standings) ? data.standings : INITIAL_STATE.standings,
+            leagues: Array.isArray(data.leagues) ? data.leagues : INITIAL_STATE.leagues,
+            transparencyDocuments: Array.isArray(data.transparencyDocuments) ? data.transparencyDocuments : INITIAL_STATE.transparencyDocuments,
+            sports: Array.isArray(data.sports) ? data.sports : INITIAL_STATE.sports
+          };
+          setAppState(merged);
+          setIsLoading(false);
+        } else {
+          // If document doesn't exist yet, seed it with INITIAL_STATE
+          setDoc(stateDocRef, INITIAL_STATE)
+            .then(() => {
+              setAppState(INITIAL_STATE);
+              setIsLoading(false);
+            })
+            .catch((err) => {
+              console.error("Error seeding initial state to Firestore:", err);
+              // Fallback to static so the app is still functional
+              setAppState(INITIAL_STATE);
+              setIsLoading(false);
+            });
         }
-      } catch (bkErr) {
-        console.error("Local backup fallback error:", bkErr);
+      }, (error) => {
+        console.error("Firestore onSnapshot error:", error);
+        // Fallback: load from local storage backup ONLY on initial error if nothing has loaded yet
+        try {
+          const saved = localStorage.getItem("FEDELIBAPAM_STATE_V1");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && typeof parsed === "object") {
+              setAppState((curr) => {
+                // If we already have live data, don't overwrite with stale local backup
+                if (curr && curr.publications && curr.publications.length > 0 && curr !== INITIAL_STATE) {
+                  return curr;
+                }
+                return { ...INITIAL_STATE, ...parsed };
+              });
+            }
+          }
+        } catch (bkErr) {
+          console.error("Local backup fallback error:", bkErr);
+        }
+        setIsLoading(false);
+      });
+    };
+
+    // Trigger initial connection
+    connectFirestore();
+
+    // Reconnection triggers for mobile: Tab switched background -> foreground or phone unlocked
+    const handleActiveResume = () => {
+      if (document.visibilityState === "visible") {
+        console.log("App returned from background/sleep. Reconnecting Firestore socket...");
+        connectFirestore();
       }
-      setIsLoading(false);
-    });
+    };
+
+    const handleWindowFocus = () => {
+      console.log("App focused. Ensuring Firestore live sync is fresh...");
+      connectFirestore();
+    };
+
+    document.addEventListener("visibilitychange", handleActiveResume);
+    window.addEventListener("focus", handleWindowFocus);
 
     // Scroll listener
     const handleScroll = () => {
@@ -200,7 +234,11 @@ export default function App() {
     window.addEventListener("scroll", handleScroll);
 
     return () => {
-      unsubscribe();
+      if (unsubscribe) {
+        unsubscribe();
+      }
+      document.removeEventListener("visibilitychange", handleActiveResume);
+      window.removeEventListener("focus", handleWindowFocus);
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
