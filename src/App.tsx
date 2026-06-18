@@ -26,7 +26,8 @@ import {
   Search, 
   CheckCircle, 
   Heart,
-  X
+  X,
+  Instagram
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -210,9 +211,9 @@ export default function App() {
   const handleResetToDefault = () => {
     setConfirmState({
       isOpen: true,
-      title: "Restablecer Plataforma",
-      message: "¿Desea restablecer todas las noticias, clasificaciones y fotos a los valores institucionales por defecto?",
-      confirmLabel: "Restablecer por Defecto",
+      title: "Restaurar",
+      message: "¿Estás seguro de restaurar?",
+      confirmLabel: "Sí, restaurar",
       onConfirm: () => {
         saveState(INITIAL_STATE);
         setTempCover(INITIAL_STATE.coverUrl);
@@ -367,7 +368,7 @@ export default function App() {
           {isAdmin ? (
             <div className="flex items-center gap-2.5 text-emerald-400">
               <span className="w-2.5 h-2.5 bg-brand-green rounded-full animate-pulse"></span>
-              <span>MODO ADMINISTRADOR ACTIVO — Tienes autorización total para editar de punta a punta</span>
+              <span>MODO ADMINISTRADOR – EDITOR</span>
             </div>
           ) : (
             <div className="flex items-center gap-2 text-slate-950 font-bold px-2.5 py-0.5 rounded-full bg-white/70 backdrop-blur-sm self-start">
@@ -379,10 +380,10 @@ export default function App() {
             {isAdmin && (
               <button
                 onClick={handleResetToDefault}
-                className="py-1 px-2.5 bg-slate-800 hover:bg-slate-700 hover:text-white text-emerald-300 rounded-lg flex items-center gap-1 transition-colors border border-slate-700 text-[10px]"
+                className="w-8 h-8 bg-slate-800 hover:bg-slate-700 text-brand-red rounded-lg transition-all border border-slate-700 flex items-center justify-center cursor-pointer shadow-md"
+                title="Restaurar"
               >
-                <RefreshCw className="w-3 h-3 text-brand-red animate-spin-slow" />
-                <span>Restaurar Valores por Defecto</span>
+                <RefreshCw className="w-4.5 h-4.5 text-brand-red" />
               </button>
             )}
 
@@ -405,9 +406,9 @@ export default function App() {
             src={safeAppState.coverUrl}
             alt="FEDELIBAPAM Portada"
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover opacity-35"
+            className="w-full h-full object-cover opacity-60"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/80"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/30 to-slate-950/60"></div>
         </div>
 
         {/* Change Cover Camera button if Admin matches */}
@@ -426,12 +427,12 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 w-full relative z-10 flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8">
           
           <div className="relative group/shield flex-shrink-0">
-            <div className="w-28 h-28 md:w-36 md:h-36 bg-slate-900 rounded-full border-4 border-slate-50 shadow-2xl overflow-hidden flex items-center justify-center p-1 bg-white">
+            <div className="w-28 h-28 md:w-36 md:h-36 bg-white rounded-full border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center p-2.5">
               <img
                 src={safeAppState.shieldUrl}
                 alt="FEDELIBAPAM Escudo"
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-contain rounded-full"
+                className="w-full h-full object-contain"
               />
             </div>
             
@@ -442,22 +443,24 @@ export default function App() {
           </div>
 
           {/* Institutional Title text descriptions */}
-          <div className="text-center md:text-left space-y-2 flex-1">
+          <div className="text-center md:text-left space-y-3 flex-1">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-green/20 border border-brand-green/30 text-emerald-300 text-[10px] md:text-xs font-mono font-bold tracking-[0.2em] rounded-full uppercase">
               <Trophy className="w-3.5 h-3.5 text-brand-red" />
-              Liga Barrial y Parroquial de Manabí
+              FEDERACIÓN DE LIGAS BARRIALES – MANABÍ
             </span>
 
             <h1 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-tight uppercase">
               FEDELI<span className="text-brand-green text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-500">BA</span><span className="text-brand-red text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-rose-600">PAM</span>
             </h1>
 
-            <p className="text-xs md:text-base text-slate-300 font-medium font-sans max-w-2xl leading-relaxed">
-              {safeAppState.introductionText}
-            </p>
+            <div className="block">
+              <p className="text-xs md:text-sm text-slate-100 font-medium font-sans max-w-2xl leading-relaxed bg-black/40 backdrop-blur-[3px] px-4 py-3 rounded-xl border border-white/10 shadow-xl inline-block text-left">
+                {safeAppState.introductionText}
+              </p>
+            </div>
 
             {/* Contacts fast anchors row */}
-            <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-mono text-slate-400 pt-3 border-t border-slate-800/80">
+            <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-mono text-slate-400 pt-3 border-t border-slate-800/80 items-center">
               <span className="flex items-center gap-1">
                 <Mail className="w-3.5 h-3.5 text-brand-green" />
                 {safeAppState.contactEmail}
@@ -470,6 +473,15 @@ export default function App() {
                 <MapPin className="w-3.5 h-3.5 text-brand-red" />
                 Manabí, Ecuador
               </span>
+              <a
+                href="https://www.instagram.com/ligacantonalportoviejo/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 bg-brand-green text-white hover:bg-brand-green/90 font-bold py-1 px-3 rounded-md transition-all hover:scale-105 cursor-pointer shadow-md text-xs font-sans"
+              >
+                <Instagram className="w-3.5 h-3.5 text-white" />
+                <span>@ligacantonalportoviejo</span>
+              </a>
             </div>
           </div>
         </div>
