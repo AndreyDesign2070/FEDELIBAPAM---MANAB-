@@ -1,0 +1,8 @@
+{
+  "name": "Remix: FEDELIBAPAM",
+  "description": "Landing page oficial de la Federación de Ligas Barriales y Parroquiales de Manabí. Plataforma de noticias, actividades, torneos y transparencia de actividades deportivas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

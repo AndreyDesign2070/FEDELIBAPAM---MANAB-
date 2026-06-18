@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --color-brand-green: #15803d; /* Forest green */
+  --color-brand-red: #dc2626; /* Deep sport red */
+  --color-brand-white: #ffffff;
+}
+
+/* Custom styles */
+html {
+  scroll-behavior: smooth;
+}
+
+.sports-grid-bg {
+  background-image: radial-gradient(circle at 1px 1px, rgba(22, 163, 74, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Custom sport pattern animation */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(1.03);
+  }
+}
+
+.pulsing-grid {
+  animation: pulse-slow 8s infinite ease-in-out;
+}
+
