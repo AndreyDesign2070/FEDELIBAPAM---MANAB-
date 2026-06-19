@@ -96,6 +96,8 @@ export default function App() {
   const [tempIntro, setTempIntro] = useState("");
   const [tempEmail, setTempEmail] = useState("");
   const [tempPhone, setTempPhone] = useState("");
+  const [isSavingHeader, setIsSavingHeader] = useState(false);
+  const [headerError, setHeaderError] = useState<string | null>(null);
 
   // Footer / Affiliation section editing states
   const [isEditingFooterBox, setIsEditingFooterBox] = useState(false);
@@ -243,16 +245,60 @@ export default function App() {
     };
   }, []);
 
+  // Utility to compress and resize base64 images to prevent Firestore payload limits (1MB)
+  const compressImage = (base64Str: string, maxWidth: number, maxHeight: number, quality: number = 0.7): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        } else {
+          resolve(base64Str);
+        }
+      };
+      img.onerror = () => {
+        resolve(base64Str);
+      };
+    });
+  };
+
   // Save to Firebase Firestore helper for full-stack multi-device real-time sync
   const saveState = async (newState: FEDELIBAPAMState) => {
     // Keep local appState immediately responsive
     setAppState(newState);
     try {
-      await setDoc(stateDocRef, newState);
+      // Clean undefined fields recursively to prevent standard Firestore setDoc validation errors
+      const cleanState = JSON.parse(JSON.stringify(newState, (key, value) => {
+        return value === undefined ? null : value;
+      }));
+
+      await setDoc(stateDocRef, cleanState);
       // Also cache locally for reliable instant launches
-      localStorage.setItem("FEDELIBAPAM_STATE_V1", JSON.stringify(newState));
+      localStorage.setItem("FEDELIBAPAM_STATE_V1", JSON.stringify(cleanState));
+      return true;
     } catch (e) {
       console.error("Error saving state to Firebase: ", e);
+      // Local backup save
+      localStorage.setItem("FEDELIBAPAM_STATE_V1", JSON.stringify(newState));
+      throw e;
     }
   };
 
@@ -270,6 +316,8 @@ export default function App() {
       setTempIntro(safeAppState.introductionText || INITIAL_STATE.introductionText);
       setTempEmail(safeAppState.contactEmail || INITIAL_STATE.contactEmail);
       setTempPhone(safeAppState.contactPhone || INITIAL_STATE.contactPhone);
+      setHeaderError(null);
+      setIsSavingHeader(false);
     }
   }, [headerEditOpen, safeAppState.coverUrl, safeAppState.shieldUrl, safeAppState.introductionText, safeAppState.contactEmail, safeAppState.contactPhone]);
 
@@ -388,17 +436,26 @@ export default function App() {
   };
 
   // Admin Header Info Submit
-  const handleSaveHeaderEdits = (e: React.FormEvent) => {
+  const handleSaveHeaderEdits = async (e: React.FormEvent) => {
     e.preventDefault();
-    saveState({
-      ...safeAppState,
-      coverUrl: tempCover.trim() || safeAppState.coverUrl,
-      shieldUrl: tempShield.trim() || safeAppState.shieldUrl,
-      introductionText: tempIntro.trim() || safeAppState.introductionText,
-      contactEmail: tempEmail.trim() || safeAppState.contactEmail,
-      contactPhone: tempPhone.trim() || safeAppState.contactPhone
-    });
-    setHeaderEditOpen(false);
+    setIsSavingHeader(true);
+    setHeaderError(null);
+    try {
+      await saveState({
+        ...safeAppState,
+        coverUrl: tempCover.trim() || safeAppState.coverUrl,
+        shieldUrl: tempShield.trim() || safeAppState.shieldUrl,
+        introductionText: tempIntro.trim() || safeAppState.introductionText,
+        contactEmail: tempEmail.trim() || safeAppState.contactEmail,
+        contactPhone: tempPhone.trim() || safeAppState.contactPhone
+      });
+      setHeaderEditOpen(false);
+    } catch (err: any) {
+      console.error("Failed to save header edits:", err);
+      setHeaderError(err?.message || "Error al guardar los cambios en la base de datos.");
+    } finally {
+      setIsSavingHeader(false);
+    }
   };
 
   // Dynamic values extract sport types for filter based on admin's additions/removals
@@ -603,9 +660,15 @@ export default function App() {
                             const file = e.target.files?.[0];
                             if (file) {
                               const reader = new FileReader();
-                              reader.onload = (event) => {
+                              reader.onload = async (event) => {
                                 if (event.target?.result) {
-                                  setTempCover(event.target.result as string);
+                                  try {
+                                    const compressed = await compressImage(event.target.result as string, 1200, 800, 0.7);
+                                    setTempCover(compressed);
+                                  } catch (compErr) {
+                                    console.error("Compression error:", compErr);
+                                    setTempCover(event.target.result as string);
+                                  }
                                 }
                               };
                               reader.readAsDataURL(file);
@@ -651,9 +714,15 @@ export default function App() {
                             const file = e.target.files?.[0];
                             if (file) {
                               const reader = new FileReader();
-                              reader.onload = (event) => {
+                              reader.onload = async (event) => {
                                 if (event.target?.result) {
-                                  setTempShield(event.target.result as string);
+                                  try {
+                                    const compressed = await compressImage(event.target.result as string, 400, 400, 0.8);
+                                    setTempShield(compressed);
+                                  } catch (compErr) {
+                                    console.error("Compression error:", compErr);
+                                    setTempShield(event.target.result as string);
+                                  }
                                 }
                               };
                               reader.readAsDataURL(file);
@@ -715,13 +784,24 @@ export default function App() {
                   </div>
                 </div>
 
+                {headerError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 font-mono text-[10px]">
+                    ⚠️ {headerError}
+                  </div>
+                )}
+
                 {/* Buttons block */}
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                   <button
                     type="submit"
-                    className="py-2 px-4 bg-slate-900 hover:bg-slate-800 text-white font-mono uppercase tracking-wider text-[11px] font-bold rounded-xl transition-all"
+                    disabled={isSavingHeader}
+                    className={`py-2 px-4 font-mono uppercase tracking-wider text-[11px] font-bold rounded-xl transition-all ${
+                      isSavingHeader
+                        ? "bg-slate-400 text-slate-250 cursor-not-allowed"
+                        : "bg-slate-900 hover:bg-slate-800 text-white"
+                    }`}
                   >
-                    Guardar Cambios
+                    {isSavingHeader ? "Guardando..." : "Guardar Cambios"}
                   </button>
                 </div>
               </form>
