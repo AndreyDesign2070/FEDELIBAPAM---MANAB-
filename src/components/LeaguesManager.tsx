@@ -144,89 +144,81 @@ export default function LeaguesManager({
       </div>
 
       {/* Admin Panel to Add League */}
-      <AnimatePresence>
-        {isAddingLeague && isAdmin && (
-          <motion.div
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="mb-8 p-5 bg-slate-50 rounded-2xl border border-slate-200"
-          >
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 font-mono mb-4">Ingresar Ficha de Liga Barrial</h3>
-            <form onSubmit={handleAddSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Nombre Oficial de la Liga *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej: Liga Barrial Colón de Portoviejo"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Cantón / Ubicación</label>
-                  <select
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
-                  >
-                    {CANTONS.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
+      {isAddingLeague && isAdmin && (
+        <div className="mb-8 p-5 bg-slate-50 rounded-2xl border border-slate-200 transition-all duration-300 ease-out animate-fade-in">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 font-mono mb-4">Ingresar Ficha de Liga Barrial</h3>
+          <form onSubmit={handleAddSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Nombre Oficial de la Liga *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Liga Barrial Colón de Portoviejo"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
+                />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Número de Clubes Afiliados</label>
-                  <input
-                    type="number"
-                    value={teamsCount}
-                    onChange={(e) => setTeamsCount(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Presidente Actual *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej: Ing. Carlos Mendoza"
-                    value={president}
-                    onChange={(e) => setPresident(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Año de Fundación</label>
-                  <input
-                    type="text"
-                    placeholder="Ej: 1998"
-                    value={founded}
-                    onChange={(e) => setFounded(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="submit"
-                  className="py-2.5 px-5 bg-slate-900 hover:bg-slate-800 text-white font-mono uppercase tracking-wider text-[11px] font-bold rounded-xl transition-all flex items-center gap-1.5"
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Cantón / Ubicación</label>
+                <select
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
                 >
-                  <Check className="w-4 h-4 text-brand-green" />
-                  Vincular Liga Barrial
-                </button>
+                  {CANTONS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Número de Clubes Afiliados</label>
+                <input
+                  type="number"
+                  value={teamsCount}
+                  onChange={(e) => setTeamsCount(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Presidente Actual *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Ing. Carlos Mendoza"
+                  value={president}
+                  onChange={(e) => setPresident(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Año de Fundación</label>
+                <input
+                  type="text"
+                  placeholder="Ej: 1998"
+                  value={founded}
+                  onChange={(e) => setFounded(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="submit"
+                className="py-2.5 px-5 bg-slate-900 hover:bg-slate-800 text-white font-mono uppercase tracking-wider text-[11px] font-bold rounded-xl transition-all flex items-center gap-1.5"
+              >
+                <Check className="w-4 h-4 text-brand-green" />
+                Vincular Liga Barrial
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Grid of Leagues cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

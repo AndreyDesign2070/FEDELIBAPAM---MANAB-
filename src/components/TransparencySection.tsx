@@ -125,119 +125,111 @@ export default function TransparencySection({
       </div>
 
       {/* Admin sub-form */}
-      <AnimatePresence>
-        {isAddingDoc && isAdmin && (
-          <motion.div
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="mb-8 p-5 md:p-6 bg-white rounded-2xl border border-slate-200 shadow-sm"
-          >
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 font-mono mb-4 flex items-center gap-1.5">
-              <FileText className="w-4 h-4 text-brand-green" />
-              Subir Archivo o Resolución Legal
-            </h3>
-            
-            <form onSubmit={handleAddSubmit} className="space-y-4">
-              {fileError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-semibold">
-                  ⚠️ {fileError}
+      {isAddingDoc && isAdmin && (
+        <div className="mb-8 p-5 md:p-6 bg-white rounded-2xl border border-slate-200 shadow-sm transition-all duration-300 ease-out animate-fade-in">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 font-mono mb-4 flex items-center gap-1.5">
+            <FileText className="w-4 h-4 text-brand-green" />
+            Subir Archivo o Resolución Legal
+          </h3>
+          
+          <form onSubmit={handleAddSubmit} className="space-y-4">
+            {fileError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-semibold">
+                ⚠️ {fileError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Nombre Exacto del Documento *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Balance Anual de Tesorería del Ejercicio 2025"
+                  value={docName}
+                  onChange={(e) => setDocName(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Categoría</label>
+                <select
+                  value={docCategory}
+                  onChange={(e) => setDocCategory(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
+                >
+                  <option value="Presupuestos">Presupuestos / Balances</option>
+                  <option value="Estatutos">Estatutos / Reglamentos</option>
+                  <option value="Resoluciones">Resoluciones / Cronogramas</option>
+                  <option value="Actas">Actas de Sesión</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Dynamic Document File upload picker */}
+            <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-5 text-center">
+              <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <p className="text-xs text-slate-700 font-bold mb-1">Cargar Documento Oficial</p>
+              <p className="text-[10px] text-slate-400 font-mono mb-3">Formatos admitidos: Word (.doc, .docx), Excel (.xls, .xlsx) o PDF - Máx. 10MB</p>
+              
+              <label className="inline-block py-2 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl cursor-pointer transition-all shadow-md">
+                📁 Elegir Archivo
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 10 * 1024 * 1024) {
+                        setFileError("El archivo supera el límite de 10MB de tamaño.");
+                        return;
+                      }
+                      setFileError("");
+                      setUploadedFileName(file.name);
+                      
+                      // auto-populate description
+                      if (!docName.trim()) {
+                        const lastDot = file.name.lastIndexOf(".");
+                        const finalName = lastDot !== -1 ? file.name.substring(0, lastDot) : file.name;
+                        setDocName(finalName);
+                      }
+
+                      const sizeStr = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+                      setDocSize(sizeStr);
+
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        if (event.target?.result) {
+                          setDocUrl(event.target.result as string);
+                        }
+                       };
+                       reader.readAsDataURL(file);
+                     }
+                   }}
+                   className="hidden"
+                 />
+              </label>
+
+              {uploadedFileName && (
+                <div className="mt-3 text-xs text-brand-green font-mono font-bold bg-emerald-50 rounded-lg p-2 inline-flex items-center gap-1.5 border border-emerald-200">
+                  <Check className="w-4.5 h-4.5 text-brand-green" />
+                  {uploadedFileName} ({docSize})
                 </div>
               )}
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Nombre Exacto del Documento *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej: Balance Anual de Tesorería del Ejercicio 2025"
-                    value={docName}
-                    onChange={(e) => setDocName(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase font-mono font-bold text-slate-500 mb-1">Categoría</label>
-                  <select
-                    value={docCategory}
-                    onChange={(e) => setDocCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brand-green text-slate-900"
-                  >
-                    <option value="Presupuestos">Presupuestos / Balances</option>
-                    <option value="Estatutos">Estatutos / Reglamentos</option>
-                    <option value="Resoluciones">Resoluciones / Cronogramas</option>
-                    <option value="Actas">Actas de Sesión</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Dynamic Document File upload picker */}
-              <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-5 text-center">
-                <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-xs text-slate-700 font-bold mb-1">Cargar Documento Oficial</p>
-                <p className="text-[10px] text-slate-400 font-mono mb-3">Formatos admitidos: Word (.doc, .docx), Excel (.xls, .xlsx) o PDF - Máx. 10MB</p>
-                
-                <label className="inline-block py-2 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl cursor-pointer transition-all shadow-md">
-                  📁 Elegir Archivo
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        if (file.size > 10 * 1024 * 1024) {
-                          setFileError("El archivo supera el límite de 10MB de tamaño.");
-                          return;
-                        }
-                        setFileError("");
-                        setUploadedFileName(file.name);
-                        
-                        // auto-populate description
-                        if (!docName.trim()) {
-                          const lastDot = file.name.lastIndexOf(".");
-                          const finalName = lastDot !== -1 ? file.name.substring(0, lastDot) : file.name;
-                          setDocName(finalName);
-                        }
-
-                        const sizeStr = (file.size / (1024 * 1024)).toFixed(2) + " MB";
-                        setDocSize(sizeStr);
-
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          if (event.target?.result) {
-                            setDocUrl(event.target.result as string);
-                          }
-                         };
-                         reader.readAsDataURL(file);
-                       }
-                     }}
-                     className="hidden"
-                   />
-                </label>
-
-                {uploadedFileName && (
-                  <div className="mt-3 text-xs text-brand-green font-mono font-bold bg-emerald-50 rounded-lg p-2 inline-flex items-center gap-1.5 border border-emerald-200">
-                    <Check className="w-4.5 h-4.5 text-brand-green" />
-                    {uploadedFileName} ({docSize})
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-2.5 pt-2">
-                <button
-                  type="submit"
-                  className="py-2.5 px-5 bg-brand-green hover:bg-brand-green/90 text-white font-mono uppercase tracking-wider text-[11px] font-bold rounded-xl transition-all flex items-center gap-1.5"
-                >
-                  <Check className="w-4 h-4" />
-                  Publicar Documento Oficial
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                type="submit"
+                className="py-2.5 px-5 bg-brand-green hover:bg-brand-green/90 text-white font-mono uppercase tracking-wider text-[11px] font-bold rounded-xl transition-all flex items-center gap-1.5"
+              >
+                <Check className="w-4 h-4" />
+                Publicar Documento Oficial
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Filter and Search Bar Row */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
